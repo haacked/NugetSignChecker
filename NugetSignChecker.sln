@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetSignChecker", "src\NugetSignChecker.csproj", "{6E88BC4C-BFFB-4EC2-8555-F90FC8F06250}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetSignChecker", "src\NugetSignChecker.csproj", "{6E88BC4C-BFFB-4EC2-8555-F90FC8F06250}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{044F8652-6250-4AF5-BDF9-EEE0F48A694D}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
