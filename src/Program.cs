@@ -1,19 +1,23 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace src
 {
     class Program
     {
-        const int packageDownloadCount = 20;
+        const string nugetApiBaseAddress = "https://api.nuget.org/";
+        const int packageDownloadCount = 100;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var tempDirectory = Path.GetTempPath();
             if (!Directory.Exists(tempDirectory))
@@ -28,7 +32,7 @@ namespace src
                 try
                 {
                     Directory.CreateDirectory(tempPackageDirectory);
-                    Console.WriteLine($"Installing the top {packageDownloadCount} most popular community packages (by download count) to '{tempPackageDirectory}'");
+                    Console.WriteLine($"Downloading the top {packageDownloadCount} most popular community packages (by download count) to '{tempPackageDirectory}'");
                 }
                 catch (Exception e)
                 {
@@ -43,8 +47,9 @@ namespace src
                 foreach (var packageId in mostDownloadedPackageIds)
                 {
                     Console.Write(packageId.PadRight(43));
-                    RunProcessGetStandardOutAndExitCode("nuget", $"install {packageId} -Source https://api.nuget.org/v3/index.json -ExcludeVersion -OutputDirectory {tempPackageDirectory}");
-                    var packageFilePath = Path.Combine(tempPackageDirectory, packageId, "*.nupkg");
+
+                    var latestVersion = await GetPackageLatestVersion(packageId);
+                    var packageFilePath = await DownloadPackage(packageId, latestVersion, tempPackageDirectory);
                     var (output, _) = RunProcessGetStandardOutAndExitCode("nuget", $"verify -Signatures {packageFilePath}");
 
                     if (!output.Contains("Signature type: Repository"))
@@ -126,5 +131,42 @@ namespace src
                         .Take(packageDownloadCount)
                         .ToList();
         }
+
+        static async Task<string> GetPackageLatestVersion(string id)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync($"{nugetApiBaseAddress}v3-flatcontainer/{id}/index.json");
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var versions = JsonConvert.DeserializeObject<PackageVersions>(responseBody);
+                return versions.Versions.LastOrDefault();
+            }
+        }
+
+        static async Task<string> DownloadPackage(string id, string version, string destinationDirectory)
+        {
+            string nupkgFileName = $"{id}.{version}.nupkg";
+            using (var httpClient = new HttpClient())
+            {
+                using (var response = await httpClient.GetAsync($"{nugetApiBaseAddress}v3-flatcontainer/{id}/{version}/{nupkgFileName}"))
+                using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
+                {
+                    string fileToWriteTo = Path.Combine(destinationDirectory, nupkgFileName);
+                    using (Stream streamToWriteTo = File.Open(fileToWriteTo, FileMode.Create))
+                    {
+                        await streamToReadFrom.CopyToAsync(streamToWriteTo);
+                    }
+
+                    response.Content = null;
+                    return fileToWriteTo;
+                }
+            }
+        }
+    }
+
+    internal class PackageVersions
+    {
+        public string[] Versions { get; set; }
     }
 }

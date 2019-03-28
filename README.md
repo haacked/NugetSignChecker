@@ -1,14 +1,18 @@
 # Nuget Sign Checker
 
 Scrapes the nuget.org [package stats page](https://www.nuget.org/stats/packages)
-to get a list of the top 20 community packages and then checks each one to see
-if it has an author signature or not.
+to get a list of the top 100 community packages and then downloads each one to
+check if the package has an author signature or not.
 
 ## Caveats
 
-The code doesn't just take the top 20 listed packages. It tries to take twenty
-unique packages. For example, there are around eight different xunit.* packages
-in the top 100 packages. That's stacking the game a bit, no?
+The code doesn't test all one hundred of the top packages. Instead, it tries to
+group packages by prefix and then picks the first one from each group. The reason
+for this behavior is that there are groups of packages that are related to each
+other and often installed together. For example, there are around eight different
+xunit.* packages. If one is signed, the rest are likely assigned. And most of
+these packages are installed as a group. I wanted to look at unique groups of 
+packages.
 
 So when there are multiple packages with the same prefix, this code just grabs
 the first one of that group and ignores the rest. It's not perfect, but it's
