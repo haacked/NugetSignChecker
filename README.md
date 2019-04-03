@@ -4,6 +4,8 @@ Scrapes the nuget.org [package stats page](https://www.nuget.org/stats/packages)
 to get a list of the top 100 community packages and then downloads each one to
 check if the package has an author signature or not.
 
+This tool is featured in a [blog post about the NuGet Package Signing experience](https://haacked.com/archive/2019/04/03/nuget-package-signing/).
+
 ## Caveats
 
 The code doesn't test all one hundred of the top packages. Instead, it tries to
